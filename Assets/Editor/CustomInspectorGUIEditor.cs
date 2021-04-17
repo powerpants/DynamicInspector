@@ -1,19 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using DynamicInspector.Attributes;
 using UnityEditor;
 using UnityEngine;
 
-namespace DynamicInspector.Editor
+namespace Editor
 {
     [CustomEditor(typeof(MonoBehaviour), true)]
     public sealed class CustomInspectorGUIEditor : UnityEditor.Editor
     {
         private bool customInspectorGUI;
         private SerializedObject obj;
-        private List<string> excludeProperties = new List<string>();
+        private HashSet<string> excludeProperties = new HashSet<string>();
+        private HashSet<string> readOnlyProperties = new HashSet<string>();
         private Type type;
+
+        private Dictionary<string, KeyValuePair<FieldInfo, List<KeyValuePair<FieldInfo, Attribute>>>>
+            fieldDict =
+                new Dictionary<string,
+                    KeyValuePair<FieldInfo, List<KeyValuePair<FieldInfo, Attribute>>>>();
+
 
         private void OnEnable() {
             type = target.GetType();
@@ -26,31 +34,38 @@ namespace DynamicInspector.Editor
 
             var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
             foreach (var field in fields) {
-                var attr = field.GetCustomAttribute(typeof(DynamicHidden), true);
-                if (attr == null) continue;
-                InitDynamicHiddenAttribute(field, attr as DynamicHidden);
+                var dynamicHiddenAttr = field.GetCustomAttribute(typeof(DynamicHidden), true);
+                if (dynamicHiddenAttr == null) {
+                    var readOnlyAttr = field.GetCustomAttribute(typeof(ReadOnly), true);
+                    if (readOnlyAttr == null) continue;
+                    InitReadOnlyAttribute(field);
+                } else InitDynamicHiddenAttribute(field, dynamicHiddenAttr as DynamicHidden);
             }
         }
 
-        private Dictionary<string, KeyValuePair<FieldInfo, List<KeyValuePair<FieldInfo, Attribute>>>>
-            fieldDict =
-                new Dictionary<string,
-                    KeyValuePair<FieldInfo, List<KeyValuePair<FieldInfo, Attribute>>>>();
+        private void InitReadOnlyAttribute(FieldInfo field) {
+            excludeProperties.Add(field.Name);
+            readOnlyProperties.Add(field.Name);
+        }
 
         private void InitDynamicHiddenAttribute(FieldInfo field, DynamicHidden attr) {
-            var switchField = type.GetField(attr.fieldName,
-                BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
-            if (switchField == null) return;
+            string fieldName = attr.fieldName;
+            FieldInfo switchField = null;
+            if (fieldName != "") {
+                switchField = type.GetField(attr.fieldName,
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+                if (switchField == null) return;
+            }
 
-            if (!fieldDict.ContainsKey(switchField.Name)) {
-                excludeProperties.Add(switchField.Name);
-                fieldDict.Add(switchField.Name,
+            if (!fieldDict.ContainsKey(fieldName)) {
+                excludeProperties.Add(fieldName);
+                fieldDict.Add(fieldName,
                     new KeyValuePair<FieldInfo, List<KeyValuePair<FieldInfo, Attribute>>>(
                         switchField, new List<KeyValuePair<FieldInfo, Attribute>>()));
             }
 
             excludeProperties.Add(field.Name);
-            fieldDict[switchField.Name].Value.Add(new KeyValuePair<FieldInfo, Attribute>(field, attr));
+            fieldDict[fieldName].Value.Add(new KeyValuePair<FieldInfo, Attribute>(field, attr));
         }
 
         public override void OnInspectorGUI() {
@@ -60,7 +75,8 @@ namespace DynamicInspector.Editor
             }
 
             DrawPropertiesExcluding(obj, excludeProperties.ToArray());
-            ProcessDynamicHiddenAttribute();
+            ProcessDynamicHiddenProperties();
+            ProcessReadOnlyProperties();
         }
 
         private object GetSwitchValue(FieldInfo field, SerializedProperty sField) {
@@ -83,35 +99,55 @@ namespace DynamicInspector.Editor
             return switchValue;
         }
 
-        private void ProcessDynamicHiddenAttribute() {
+        private void ProcessDynamicHiddenProperties() {
             foreach (var pair in fieldDict) {
-                var switchField = pair.Value.Key;
-                var sSwitchField = obj.FindProperty(switchField.Name);
-                if (sSwitchField == null) continue;
-                EditorGUILayout.PropertyField(sSwitchField);
+                string fieldName = pair.Key;
 
-                var switchValue = GetSwitchValue(switchField, sSwitchField);
+                object switchValue = null;
+                if (fieldName != "") {
+                    var switchField = pair.Value.Key;
+                    var sSwitchField = obj.FindProperty(switchField.Name);
+                    if (sSwitchField == null) continue;
+                    EditorGUILayout.PropertyField(sSwitchField);
+                    switchValue = GetSwitchValue(switchField, sSwitchField);
+                }
+
                 var fieldAttrPairsList = pair.Value.Value;
 
                 foreach (var fieldAttrPair in fieldAttrPairsList) {
                     var field = fieldAttrPair.Key;
                     var attr = (DynamicHidden) fieldAttrPair.Value;
 
-                    if (attr.show.Equals(switchValue)) {
-                        using (var sField = obj.FindProperty(field.Name)) {
-                            if (sField != null) EditorGUILayout.PropertyField(sField, true);
-                        }
-                    } else if (attr.readOnly) {
-                        using (var sField = obj.FindProperty(field.Name)) {
-                            if (sField != null) {
-                                GUI.enabled = false;
-                                EditorGUILayout.PropertyField(sField, true);
-                                GUI.enabled = true;
-                            }
+                    var readOnly = field.GetCustomAttribute(typeof(ReadOnly), true) != null;
+                    using (var sField = obj.FindProperty(field.Name)) {
+                        if (fieldName == "" ||
+                            fieldName != "" && switchValue != null && attr.show != null &&
+                            attr.show.Equals(switchValue)) {
+                            DrawPropertyField(sField, fieldName == "" || attr.readOnly || readOnly);
                         }
                     }
                 }
             }
+        }
+
+        private void DrawPropertyField(SerializedProperty sField, bool readOnly = false) {
+            if (sField == null) return;
+            if (readOnly) {
+                GUI.enabled = false;
+                EditorGUILayout.PropertyField(sField, true);
+                GUI.enabled = true;
+            } else EditorGUILayout.PropertyField(sField, true);
+        }
+
+        private void ProcessReadOnlyProperties() {
+            GUI.enabled = false;
+            foreach (var readOnlyField in readOnlyProperties) {
+                using (var sField = obj.FindProperty(readOnlyField))
+                    if (sField != null)
+                        EditorGUILayout.PropertyField(sField, true);
+            }
+
+            GUI.enabled = true;
         }
     }
 }

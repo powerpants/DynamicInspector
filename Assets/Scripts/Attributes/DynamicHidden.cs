@@ -9,7 +9,7 @@ namespace DynamicInspector.Attributes
         public object show;
         public bool readOnly;
 
-        public DynamicHidden(string fieldName, object show, bool readOnly = false) {
+        public DynamicHidden(string fieldName, object show = null, bool readOnly = false) {
             this.fieldName = fieldName;
             this.show = show;
             this.readOnly = readOnly;
