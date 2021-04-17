@@ -10,7 +10,7 @@ A Simple Custom Unity Inspector Editor that allows you use Attribute to hide pro
     - the third one is a bool option indicate whether to hide or non-writable, default is to hide. 
 
 ### Sample
-* Here is a sample.
-![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/code.png "code")
-![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector1.png "code")
-![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector2.png "code")
+* Here is a sample.  
+![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/code.png "code")  
+![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector1.png "code")  
+![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector2.png "code")  
