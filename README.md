@@ -1,7 +1,7 @@
 # DynamicInspector
 A Simple Custom Unity Inspector Editor that allows you use Attribute to hide properties or make it readonly dynamically.
 
-###Usage
+### Usage
 + Add class attribute CustomInspectorGUI to enable.
 + Add field attribute DynamicHidden to which field you want to hide in Inspector.
 + The DynamicHidden attribute needs three parameters:
@@ -9,8 +9,8 @@ A Simple Custom Unity Inspector Editor that allows you use Attribute to hide pro
     - the second one is a value indicate when to hide.
     - the third one is a bool option indicate whether to hide or non-writable, default is to hide. 
 
-###Sample
-* here is a sample.
+### Sample
+* Here is a sample.
 ![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/code.png "code")
 ![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector1.png "code")
 ![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector2.png "code")
