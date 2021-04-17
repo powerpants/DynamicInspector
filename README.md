@@ -11,6 +11,6 @@ A Simple Custom Unity Inspector Editor that allows you use Attribute to hide pro
 
 ### Sample
 * Here is a sample.  
-![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/code.png "code")  
-![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector1.png "code")  
-![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector2.png "code")  
+![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/codev1.png "code")  
+![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector1v1.png "code")  
+![sample](https://raw.githubusercontent.com/powerpants/DynamicInspector/main/Doc/Inspector2v1.png "code")  
