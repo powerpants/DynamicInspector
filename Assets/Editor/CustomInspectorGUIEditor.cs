@@ -6,7 +6,7 @@ using DynamicInspector.Attributes;
 using UnityEditor;
 using UnityEngine;
 
-namespace Editor
+namespace DynamicInspector.Editor
 {
     [CustomEditor(typeof(MonoBehaviour), true)]
     public sealed class CustomInspectorGUIEditor : UnityEditor.Editor
