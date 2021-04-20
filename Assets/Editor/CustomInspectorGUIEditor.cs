@@ -74,9 +74,15 @@ namespace DynamicInspector.Editor
                 return;
             }
 
+            EditorGUI.BeginChangeCheck();
+            obj.UpdateIfRequiredOrScript();
+            
             DrawPropertiesExcluding(obj, excludeProperties.ToArray());
             ProcessDynamicHiddenProperties();
             ProcessReadOnlyProperties();
+            
+            obj.ApplyModifiedProperties();
+            EditorGUI.EndChangeCheck();
         }
 
         private object GetSwitchValue(FieldInfo field, SerializedProperty sField) {
