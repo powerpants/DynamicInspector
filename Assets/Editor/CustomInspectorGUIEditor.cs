@@ -79,7 +79,7 @@ namespace DynamicInspector.Editor
 
             DrawOtherProperties();
             ProcessDynamicHiddenProperties();
-            ProcessReadOnlyProperties();
+            // ProcessReadOnlyProperties();
 
             obj.ApplyModifiedProperties();
             EditorGUI.EndChangeCheck();
@@ -153,17 +153,6 @@ namespace DynamicInspector.Editor
                 EditorGUILayout.PropertyField(sField, true);
                 GUI.enabled = true;
             } else EditorGUILayout.PropertyField(sField, true);
-        }
-
-        private void ProcessReadOnlyProperties() {
-            GUI.enabled = false;
-            foreach (var readOnlyField in readOnlyProperties) {
-                using (var sField = obj.FindProperty(readOnlyField))
-                    if (sField != null)
-                        EditorGUILayout.PropertyField(sField, true);
-            }
-
-            GUI.enabled = true;
         }
     }
 }
