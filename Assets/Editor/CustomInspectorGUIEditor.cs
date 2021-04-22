@@ -44,7 +44,7 @@ namespace DynamicInspector.Editor
         }
 
         private void InitReadOnlyAttribute(FieldInfo field) {
-            excludeProperties.Add(field.Name);
+            // excludeProperties.Add(field.Name);
             readOnlyProperties.Add(field.Name);
         }
 
@@ -70,19 +70,29 @@ namespace DynamicInspector.Editor
 
         public override void OnInspectorGUI() {
             if (!customInspectorGUI) {
-                base.OnInspectorGUI();
+                DrawDefaultInspector();
                 return;
             }
 
             EditorGUI.BeginChangeCheck();
             obj.UpdateIfRequiredOrScript();
-            
-            DrawPropertiesExcluding(obj, excludeProperties.ToArray());
+
+            DrawOtherProperties();
             ProcessDynamicHiddenProperties();
             ProcessReadOnlyProperties();
-            
+
             obj.ApplyModifiedProperties();
             EditorGUI.EndChangeCheck();
+        }
+
+        private void DrawOtherProperties() {
+            SerializedProperty iterator = obj.GetIterator();
+            bool enterChildren = true;
+            while (iterator.NextVisible(enterChildren)) {
+                enterChildren = false;
+                if (!((IEnumerable<string>) excludeProperties).Contains<string>(iterator.name))
+                    DrawPropertyField(iterator, readOnlyProperties.Contains(iterator.name));
+            }
         }
 
         private object GetSwitchValue(FieldInfo field, SerializedProperty sField) {
@@ -136,7 +146,7 @@ namespace DynamicInspector.Editor
             }
         }
 
-        private void DrawPropertyField(SerializedProperty sField, bool readOnly = false) {
+        private static void DrawPropertyField(SerializedProperty sField, bool readOnly = false) {
             if (sField == null) return;
             if (readOnly) {
                 GUI.enabled = false;
